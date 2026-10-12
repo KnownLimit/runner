@@ -20,11 +20,12 @@
   <canvas id="game" tabindex="0" aria-label="Яunner driving game"></canvas>
   <div id="loading"><small>KNOWN LIMIT / SECTOR 08</small><b>Establishing signal</b><progress id="progress" value="0" max="1"></progress><p id="status">Loading sector. Headphones recommended.</p></div>
   <script src="performance-diagnostics.js"></script>
-  <script src="texture-payloads.js"></script>
+  <script src="texture-payloads.js?v=20261012063945"></script>
   <script src="Build/Web.loader.js"></script>
   <script>
     const canvas = document.getElementById('game');
-    let dataUrl = 'Build/Web.data.unityweb';
+    const revision = window.runnerTexturePayloads?.revision || '20261012063945';
+    let dataUrl = window.runnerTexturePayloads?.dxt || 'Build/runner-desktop.0b66946606820b7f.data.unityweb';
     const probeCanvas = document.createElement('canvas');
     const probe = probeCanvas.getContext('webgl2');
     const supportsASTC = !!(probe && probe.getExtension('WEBGL_compressed_texture_astc'));
@@ -35,13 +36,13 @@
     if (probe) probe.getExtension('WEBGL_lose_context')?.loseContext();
     const config = {
       dataUrl,
-      frameworkUrl: 'Build/Web.framework.js.unityweb',
-      codeUrl: 'Build/Web.wasm.unityweb',
+      frameworkUrl: 'Build/Web.framework.js.unityweb?v=' + revision,
+      codeUrl: 'Build/Web.wasm.unityweb?v=' + revision,
       streamingAssetsUrl: 'StreamingAssets',
       companyName: 'Known Limit',
       productName: 'Runner',
-      productVersion: '0.1.0',
-      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+      productVersion: '0.1.1',
+      devicePixelRatio: window.devicePixelRatio || 1,
       matchWebGLToCanvasSize: true
     };
     createUnityInstance(canvas, config, progress => {
