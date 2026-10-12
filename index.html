@@ -17,14 +17,15 @@
   </style>
 </head>
 <body>
-  <canvas id="game" tabindex="0" aria-label="Яunner driving game"></canvas>
+  <canvas id="game" tabindex="0" aria-label="Ð¯unner driving game"></canvas>
   <div id="loading"><small>KNOWN LIMIT / SECTOR 08</small><b>Establishing signal</b><progress id="progress" value="0" max="1"></progress><p id="status">Loading sector. Headphones recommended.</p></div>
+  <script src="web-frame-audit.js"></script>
   <script src="performance-diagnostics.js"></script>
-  <script src="texture-payloads.js?v=20261012171809"></script>
-  <script src="Build/Web.loader.js"></script>
+  <script src="texture-payloads.js?v=20261012192441"></script>
+  <script src="runtime-payloads.js?v=20261012192441"></script>
   <script>
     const canvas = document.getElementById('game');
-    const revision = window.runnerTexturePayloads?.revision || '20261012171809';
+    const revision = window.runnerTexturePayloads?.revision || '20261012192441';
     let dataUrl = window.runnerTexturePayloads?.dxt || 'Build/runner-desktop.7a07183dc73a4391.data.unityweb';
     const probeCanvas = document.createElement('canvas');
     const probe = probeCanvas.getContext('webgl2');
@@ -34,10 +35,16 @@
     }
     window.runnerSelectedTexture = dataUrl === window.runnerTexturePayloads?.astc ? 'ASTC 4x4' : 'DXT';
     if (probe) probe.getExtension('WEBGL_lose_context')?.loseContext();
+    const runtimes = window.runnerRuntimePayloads;
+    const workersAvailable = window.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined';
+    const requested = new URLSearchParams(location.search).get('runtime');
+    const threaded = workersAvailable && requested !== 'single' && !!runtimes?.threaded;
+    const engine = threaded ? runtimes.threaded : runtimes?.single;
+    window.runnerRuntimeMode = threaded ? 'threaded' : 'single';
     const config = {
       dataUrl,
-      frameworkUrl: 'Build/Web.framework.js.unityweb?v=' + revision,
-      codeUrl: 'Build/Web.wasm.unityweb?v=' + revision,
+      frameworkUrl: engine?.framework || 'Build/Web.framework.js.unityweb?v=' + revision,
+      codeUrl: engine?.code || 'Build/Web.wasm.unityweb?v=' + revision,
       streamingAssetsUrl: 'StreamingAssets',
       companyName: 'Known Limit',
       productName: 'Runner',
@@ -45,7 +52,10 @@
       devicePixelRatio: window.devicePixelRatio || 1,
       matchWebGLToCanvasSize: true
     };
-    createUnityInstance(canvas, config, progress => {
+    const loader = document.createElement('script');
+    loader.src = engine?.loader || 'Build/Web.loader.js';
+    loader.onerror = () => { document.getElementById('status').textContent = 'Could not load the game runtime.'; };
+    loader.onload = () => createUnityInstance(canvas, config, progress => {
       document.getElementById('progress').value = progress;
     }).then(instance => {
       document.getElementById('loading').remove();
@@ -54,6 +64,7 @@
     }).catch(error => {
       document.getElementById('status').textContent = 'The signal could not connect: ' + error;
     });
+    document.body.appendChild(loader);
     canvas.addEventListener('contextmenu', event => event.preventDefault());
   </script>
 </body>
