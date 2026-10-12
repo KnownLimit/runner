@@ -19,11 +19,22 @@
 <body>
   <canvas id="game" tabindex="0" aria-label="Яunner driving game"></canvas>
   <div id="loading"><small>KNOWN LIMIT / SECTOR 08</small><b>Establishing signal</b><progress id="progress" value="0" max="1"></progress><p id="status">Loading sector. Headphones recommended.</p></div>
+  <script src="performance-diagnostics.js"></script>
+  <script src="texture-payloads.js"></script>
   <script src="Build/Web.loader.js"></script>
   <script>
     const canvas = document.getElementById('game');
+    let dataUrl = 'Build/Web.data.unityweb';
+    const probeCanvas = document.createElement('canvas');
+    const probe = probeCanvas.getContext('webgl2');
+    const supportsASTC = !!(probe && probe.getExtension('WEBGL_compressed_texture_astc'));
+    if (supportsASTC && window.runnerTexturePayloads?.astc) {
+      dataUrl = window.runnerTexturePayloads.astc;
+    }
+    window.runnerSelectedTexture = dataUrl === window.runnerTexturePayloads?.astc ? 'ASTC 4x4' : 'DXT';
+    if (probe) probe.getExtension('WEBGL_lose_context')?.loseContext();
     const config = {
-      dataUrl: 'Build/Web.data.unityweb',
+      dataUrl,
       frameworkUrl: 'Build/Web.framework.js.unityweb',
       codeUrl: 'Build/Web.wasm.unityweb',
       streamingAssetsUrl: 'StreamingAssets',
@@ -46,3 +57,5 @@
   </script>
 </body>
 </html>
+
+
