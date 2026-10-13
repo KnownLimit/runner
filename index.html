@@ -17,16 +17,16 @@
   </style>
 </head>
 <body>
-  <canvas id="game" tabindex="0" aria-label="Ð¯unner driving game"></canvas>
+  <canvas id="game" tabindex="0" aria-label="Яunner driving game"></canvas>
   <div id="loading"><small>KNOWN LIMIT / SECTOR 08</small><b>Establishing signal</b><progress id="progress" value="0" max="1"></progress><p id="status">Loading sector. Headphones recommended.</p></div>
   <script src="web-frame-audit.js"></script>
   <script src="performance-diagnostics.js"></script>
-  <script src="texture-payloads.js?v=20261012192441"></script>
-  <script src="runtime-payloads.js?v=20261012192441"></script>
+  <script src="texture-payloads.js?v=__RUNNER_BUILD__"></script>
+  <script src="runtime-payloads.js?v=__RUNNER_BUILD__"></script>
   <script>
     const canvas = document.getElementById('game');
-    const revision = window.runnerTexturePayloads?.revision || '20261012192441';
-    let dataUrl = window.runnerTexturePayloads?.dxt || 'Build/runner-desktop.7a07183dc73a4391.data.unityweb';
+    const revision = window.runnerTexturePayloads?.revision || '__RUNNER_BUILD__';
+    let dataUrl = window.runnerTexturePayloads?.dxt || 'Build/Web.data.unityweb';
     const probeCanvas = document.createElement('canvas');
     const probe = probeCanvas.getContext('webgl2');
     const supportsASTC = !!(probe && probe.getExtension('WEBGL_compressed_texture_astc'));
@@ -38,7 +38,15 @@
     const runtimes = window.runnerRuntimePayloads;
     const workersAvailable = window.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined';
     const requested = new URLSearchParams(location.search).get('runtime');
-    const threaded = workersAvailable && requested !== 'single' && !!runtimes?.threaded;
+    // SharedArrayBuffer availability does not establish stable threaded Wasm on iOS.
+    // The deployed iPhone test crashes in threaded startup and succeeds with identical
+    // graphics/data in the single-thread runtime. Keep that verified path as default.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const threaded = workersAvailable && requested !== 'single' && !!runtimes?.threaded &&
+      (!isIOS || requested === 'threaded');
+    window.runnerRuntimeReason = isIOS && requested !== 'threaded' ? 'iOS compatibility' :
+      threaded ? 'native workers available' : 'compatible fallback';
     const engine = threaded ? runtimes.threaded : runtimes?.single;
     window.runnerRuntimeMode = threaded ? 'threaded' : 'single';
     const config = {
