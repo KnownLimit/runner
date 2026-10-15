@@ -22,7 +22,6 @@
   <script src="web-frame-audit.js"></script>
   <script src="performance-diagnostics.js"></script>
   <script src="texture-payloads.js?v=__RUNNER_BUILD__"></script>
-  <script src="runtime-payloads.js?v=__RUNNER_BUILD__"></script>
   <script>
     const canvas = document.getElementById('game');
     const revision = window.runnerTexturePayloads?.revision || '__RUNNER_BUILD__';
@@ -52,7 +51,7 @@
     const config = {
       dataUrl,
       frameworkUrl: engine?.framework || 'Build/Web.framework.js.unityweb?v=' + revision,
-      codeUrl: engine?.code || 'Build/Web.wasm.unityweb?v=' + revision,
+      codeUrl: engine?.code || (new URLSearchParams(location.search).get('wasm') === 'original' ? 'Build/Web.wasm.unityweb' : 'Build/Web.optimized.wasm.unityweb') + '?v=postexport-o4-20261015',
       streamingAssetsUrl: 'StreamingAssets',
       companyName: 'Known Limit',
       productName: 'Runner',
