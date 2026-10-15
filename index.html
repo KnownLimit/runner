@@ -19,9 +19,10 @@
 <body>
   <canvas id="game" tabindex="0" aria-label="Яunner driving game"></canvas>
   <div id="loading"><small>KNOWN LIMIT / SECTOR 08</small><b>Establishing signal</b><progress id="progress" value="0" max="1"></progress><p id="status">Loading sector. Headphones recommended.</p></div>
-  <script src="web-frame-audit.js"></script>
-  <script src="performance-diagnostics.js"></script>
+  <script src="web-frame-audit.js?v=fps-20261015"></script>
+  <script src="performance-diagnostics.js?v=fps-20261015"></script>
   <script src="texture-payloads.js?v=__RUNNER_BUILD__"></script>
+  <script src="runtime-payloads.js?v=__RUNNER_BUILD__"></script>
   <script>
     const canvas = document.getElementById('game');
     const revision = window.runnerTexturePayloads?.revision || '__RUNNER_BUILD__';
@@ -51,7 +52,7 @@
     const config = {
       dataUrl,
       frameworkUrl: engine?.framework || 'Build/Web.framework.js.unityweb?v=' + revision,
-      codeUrl: engine?.code || (new URLSearchParams(location.search).get('wasm') === 'original' ? 'Build/Web.wasm.unityweb' : 'Build/Web.optimized.wasm.unityweb') + '?v=postexport-o4-20261015',
+      codeUrl: engine?.code || 'Build/Web.wasm.unityweb?v=' + revision,
       streamingAssetsUrl: 'StreamingAssets',
       companyName: 'Known Limit',
       productName: 'Runner',

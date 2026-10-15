@@ -46,8 +46,8 @@
         const native = Math.abs(canvas.width - expected.width) <= 1 && Math.abs(canvas.height - expected.height) <= 1 && Math.abs(world.width - expected.width) <= 1 && Math.abs(world.height - expected.height) <= 1;
         const texture = window.runnerSelectedTexture || 'loading';
         const revision = window.runnerTexturePayloads?.revision || 'unknown';
-        panel.textContent = `${unity ? 'Unity render frames: ' + unity.fps.toFixed(1) : 'Observed render intervals: ' + (observed ? fps.toFixed(1) : 'unavailable')}/s\n${unity ? 'Mean frame: ' + unity.milliseconds.toFixed(1) : '95th percentile: ' + p95.toFixed(1)} ms\nWorld: ${world.width} x ${world.height}\nCanvas: ${canvas.width} x ${canvas.height}\nNative: ${expected.width} x ${expected.height} (${native ? 'MATCH' : 'MISMATCH'})\nTexture: ${texture}\nBuild: ${revision}\nCompare the same route in LOW and FULL.`;
-        window.runnerBrowserTiming = {fps: unity?.fps || fps, p95Milliseconds: p95, observed, texture,
+        panel.textContent = `FPS: ${unity ? unity.fps.toFixed(1) : (observed ? fps.toFixed(1) : 'waiting')} (${unity ? 'Unity rendered' : 'observed rendered'})\n${unity ? 'Mean frame: ' + unity.milliseconds.toFixed(1) : '95th percentile: ' + p95.toFixed(1)} ms\nWorld: ${world.width} x ${world.height}\nCanvas: ${canvas.width} x ${canvas.height}\nNative: ${expected.width} x ${expected.height} (${native ? 'MATCH' : 'MISMATCH'})\nTexture: ${texture}\nBuild: ${revision}\nCompare the same route in LOW and FULL.`;
+        window.runnerBrowserTiming = {fps: unity?.fps ?? fps, p95Milliseconds: p95, observed, texture,
           width: canvas.width, height: canvas.height, expected, world, native, revision};
         frames = 0; start = now; samples.length = 0;
       }

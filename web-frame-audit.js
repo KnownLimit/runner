@@ -5,6 +5,11 @@
   const nativeContext = canvas.getContext;
   const nativeRAF = window.requestAnimationFrame.bind(window);
   let gl, timer, query, draws = 0, cpu = [], gpu = [], drawSamples = [], pending = [];
+  let frameCount = 0, lastFrameTime = null, sampleStart = performance.now();
+  document.addEventListener('visibilitychange', () => {
+    frameCount = 0; lastFrameTime = null; sampleStart = performance.now();
+    cpu = []; gpu = []; drawSamples = [];
+  });
   const textures = new WeakMap(), bindings = new Map(), targets = new Set();
   canvas.getContext = function (...args) {
     const result = nativeContext.apply(this, args);
@@ -28,7 +33,11 @@
     if (gl && timer && !query) { query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); }
     callback(time);
     if (query) { gl.endQuery(timer.TIME_ELAPSED_EXT); pending.push({query, rendered:draws > firstDraw}); query = null; }
-    if (draws > firstDraw) { cpu.push(performance.now() - before); drawSamples.push(draws - firstDraw); }
+    if (draws > firstDraw && !document.hidden) {
+      cpu.push(performance.now() - before); drawSamples.push(draws - firstDraw);
+      // Count rendered browser frames, not GL draws or unrelated RAF callbacks.
+      if (time !== lastFrameTime) { frameCount++; lastFrameTime = time; }
+    }
   });
   const panel = document.createElement('pre'); panel.id = 'runner-frame-audit';
   Object.assign(panel.style, { position:'fixed', left:'8px', top:'8px', zIndex:30, color:'#fff', background:'#101820e8', padding:'8px', font:'12px monospace', pointerEvents:'none' });
@@ -46,8 +55,10 @@
     const module = window.runnerPlayer?.Module;
     // Release Emscripten exports HEAPU32/HEAPF32, but may keep HEAPU8 private.
     const heap = module?.HEAPU32 || module?.HEAPF32;
-    const report = { cpuMs:mean(cpu), gpuMs:mean(gpu), draws:mean(drawSamples), canvas:[canvas.width,canvas.height], native:[Math.round(r.width*ratio),Math.round(r.height*ratio)], targets:[...targets], threadsAvailable:crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined', sharedHeap:heap ? typeof SharedArrayBuffer !== 'undefined' && heap.buffer instanceof SharedArrayBuffer : null, heapMB:heap ? heap.byteLength/1048576 : null };
-    panel.textContent = `Unity callback CPU: ${report.cpuMs?.toFixed(2) ?? 'pending'} ms\nGPU: ${report.gpuMs?.toFixed(2) ?? 'timer unavailable'} ms\nDraws: ${report.draws?.toFixed(0) ?? 'pending'}\nRender targets: ${report.targets.join(', ')}\nRuntime: ${window.runnerRuntimeMode || 'single'}; shared heap: ${report.sharedHeap}\nWasm heap: ${report.heapMB ?? 'unavailable'} MB\nNative workers available: ${report.threadsAvailable}`;
-    panel.dataset.report = JSON.stringify(report); cpu=[];gpu=[];drawSamples=[];
+    const now = performance.now(), elapsed = now - sampleStart;
+    const fps = document.hidden || !gl || elapsed <= 0 ? null : frameCount * 1000 / elapsed;
+    const report = { fps, frameMs: fps > 0 ? 1000 / fps : null, cpuMs:mean(cpu), gpuMs:mean(gpu), draws:mean(drawSamples), canvas:[canvas.width,canvas.height], native:[Math.round(r.width*ratio),Math.round(r.height*ratio)], targets:[...targets], threadsAvailable:crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined', sharedHeap:heap ? typeof SharedArrayBuffer !== 'undefined' && heap.buffer instanceof SharedArrayBuffer : null, heapMB:heap ? heap.byteLength/1048576 : null };
+    panel.textContent = `FPS: ${report.fps?.toFixed(1) ?? 'waiting'} | Frame: ${report.frameMs?.toFixed(1) ?? '—'} ms\nUnity callback CPU: ${report.cpuMs?.toFixed(2) ?? 'pending'} ms\nGPU: ${report.gpuMs?.toFixed(2) ?? 'timer unavailable'} ms\nDraws: ${report.draws?.toFixed(0) ?? 'pending'}\nRender targets: ${report.targets.join(', ')}\nRuntime: ${window.runnerRuntimeMode || 'single'}; shared heap: ${report.sharedHeap}\nWasm heap: ${report.heapMB ?? 'unavailable'} MB\nNative workers available: ${report.threadsAvailable}`;
+    panel.dataset.report = JSON.stringify(report); cpu=[];gpu=[];drawSamples=[]; frameCount=0; sampleStart=now;
   }, 2000);
 })();
