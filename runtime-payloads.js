@@ -1,0 +1,1 @@
+window.runnerRuntimePayloads = {"single":{"loader":"Build/Web.loader.js?v=20261016002655","framework":"Build/Web.framework.js.unityweb?v=20261016002655","code":"Build/Web.wasm.unityweb?v=20261016002655"}};
