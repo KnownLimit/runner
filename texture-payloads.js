@@ -1,1 +1,1 @@
-window.runnerTexturePayloads = {"astc":"Build/runner-mobile.fe65c825299a88c7.data.unityweb","dxt":"Build/runner-desktop.5607eb7ac93de4a0.data.unityweb","revision":"20261016002655"};
+window.runnerTexturePayloads = {"astc":"Build/runner-mobile.44a566ae415d5d4d.data.unityweb","dxt":"Build/runner-desktop.3b5e1f47682f344e.data.unityweb","revision":"20261016194236"};
